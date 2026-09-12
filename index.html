@@ -295,8 +295,12 @@ function checkSchedule(procId, loomId, date) {
   else if (proc.status !== 'pending') errs.push('该工序已排程或已完工，不能重复排程');
   if (!loomById(loomId)) errs.push('请选择机台');
   if (!date) errs.push('请选择生产日期');
-  if (loomId && date && state.schedules.some(s => s.loomId === loomId && s.date === date && s.status === 'active'))
-    errs.push('该机台当天已有排程，同一机台同一天不能重复安排');
+  if (loomId && date) {
+    const clash = state.schedules.find(s => s.loomId === loomId && s.date === date && s.status !== 'cancelled');
+    if (clash) errs.push(clash.status === 'done'
+      ? '该机台当天已有完工记录，同一机台同一天不能重复安排'
+      : '该机台当天已有进行中的排程，同一机台同一天不能重复安排');
+  }
   if (proc) {
     for (const u of proc.yarnUse) {
       const y = yarnById(u.yarnId);
