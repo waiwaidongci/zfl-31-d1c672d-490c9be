@@ -1,0 +1,9 @@
+{
+  "name": "brocade-studio-scheduler",
+  "version": "1.0.0",
+  "private": true,
+  "description": "手工织锦工作室 · 生产排程与色线库存联动台",
+  "scripts": {
+    "test": "node test.js"
+  }
+}
