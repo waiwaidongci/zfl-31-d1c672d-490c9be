@@ -1,134 +1,706 @@
 <!doctype html>
 <html lang="zh-CN">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>手工织锦纹样排版台</title>
-  <style>
-    * { box-sizing: border-box; }
-    body { margin: 0; font-family: Arial, "PingFang SC", sans-serif; background: #f3efe7; color: #282018; }
-    header { padding: 18px 24px; background: #fffaf2; border-bottom: 1px solid #d9cdbc; display: flex; justify-content: space-between; gap: 16px; align-items: center; }
-    h1 { margin: 0; font-size: 26px; }
-    button { border: 0; border-radius: 8px; padding: 10px 13px; background: #8d3e37; color: #fff; font-weight: 800; cursor: pointer; }
-    button.secondary { background: #71675c; }
-    input, select { width: 100%; border: 1px solid #d9cdbc; border-radius: 6px; padding: 9px; font: inherit; background: #fff; }
-    label { display: block; margin: 9px 0 5px; color: #76695e; font-size: 13px; }
-    .app { display: grid; grid-template-columns: 280px 1fr 320px; gap: 16px; padding: 16px; }
-    .panel { background: #fffaf2; border: 1px solid #d9cdbc; border-radius: 8px; padding: 14px; }
-    .grid { display: grid; gap: 2px; margin: 0 auto; width: min(100%, 720px); border: 6px solid #72533c; background: #72533c; }
-    .cell { aspect-ratio: 1; background: #f8ead2; cursor: pointer; border-radius: 2px; }
-    .palette { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
-    .swatch { aspect-ratio: 1; border-radius: 8px; border: 3px solid transparent; cursor: pointer; }
-    .swatch.active { border-color: #1f1b16; }
-    .blocks { display: grid; gap: 8px; }
-    .stats { display: grid; gap: 8px; }
-    .stat { display: flex; justify-content: space-between; border-bottom: 1px solid #e1d5c5; padding: 6px 0; }
-    .preview { display: grid; grid-template-columns: repeat(6, 1fr); gap: 2px; border: 1px solid #d9cdbc; padding: 6px; margin-top: 8px; }
-    .mini { aspect-ratio: 1; border-radius: 2px; }
-    .toolbar { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-    .warning { color: #a03a2e; font-weight: 800; }
-    @media (max-width: 1000px) { header { display: block; } .app { grid-template-columns: 1fr; } }
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>织锦工作室 · 生产排程与色线库存联动台</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: "PingFang SC", "Microsoft YaHei", Arial, sans-serif; background: #f3efe7; color: #282018; }
+  header { padding: 14px 22px; background: #fffaf2; border-bottom: 1px solid #d9cdbc; display: flex; justify-content: space-between; align-items: center; gap: 14px; flex-wrap: wrap; }
+  h1 { margin: 0; font-size: 22px; }
+  h2 { font-size: 17px; margin: 18px 0 10px; }
+  h3 { font-size: 15px; margin: 14px 0 8px; }
+  .sub { color: #76695e; font-size: 13px; margin-top: 3px; }
+  nav { display: flex; gap: 6px; flex-wrap: wrap; padding: 10px 22px 0; background: #fffaf2; border-bottom: 1px solid #d9cdbc; }
+  nav button { border: 1px solid #d9cdbc; border-bottom: 0; border-radius: 8px 8px 0 0; background: #efe6d8; color: #5c4f43; padding: 9px 16px; font-weight: 700; cursor: pointer; }
+  nav button.active { background: #8d3e37; color: #fff; border-color: #8d3e37; }
+  main { padding: 16px 22px 60px; max-width: 1280px; margin: 0 auto; }
+  section.tab { display: none; }
+  section.tab.active { display: block; }
+  .panel { background: #fffaf2; border: 1px solid #d9cdbc; border-radius: 10px; padding: 16px; margin-bottom: 16px; }
+  button { border: 0; border-radius: 7px; padding: 8px 13px; background: #8d3e37; color: #fff; font-weight: 700; cursor: pointer; font-size: 13px; }
+  button.secondary { background: #71675c; }
+  button.ghost { background: #e7dccb; color: #5c4f43; }
+  button.danger { background: #a03a2e; }
+  button:disabled { opacity: .45; cursor: not-allowed; }
+  input, select, textarea { border: 1px solid #d9cdbc; border-radius: 6px; padding: 8px; font: inherit; background: #fff; width: 100%; }
+  label { display: block; margin: 8px 0 4px; color: #76695e; font-size: 12.5px; font-weight: 700; }
+  table { width: 100%; border-collapse: collapse; font-size: 13.5px; background: #fff; }
+  th, td { border: 1px solid #e4d9c8; padding: 8px 9px; text-align: left; vertical-align: top; }
+  th { background: #f1e8d8; font-size: 12.5px; color: #5c4f43; white-space: nowrap; }
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 16px; }
+  .card { background: #fffaf2; border: 1px solid #d9cdbc; border-radius: 10px; padding: 12px 14px; }
+  .card .num { font-size: 26px; font-weight: 800; color: #8d3e37; }
+  .card .lbl { color: #76695e; font-size: 12.5px; margin-top: 2px; }
+  .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 4px 14px; }
+  .row { display: flex; gap: 8px; align-items: center; margin-bottom: 6px; }
+  .row select { flex: 1; }
+  .row input { width: 110px; }
+  .row .del { padding: 6px 9px; }
+  .tag { display: inline-block; padding: 2px 9px; border-radius: 20px; font-size: 12px; font-weight: 700; }
+  .t-pending { background: #efe3c2; color: #7a5b12; }
+  .t-active { background: #d8e6ef; color: #1f5f78; }
+  .t-done { background: #dcead8; color: #355b38; }
+  .t-cancel { background: #ead9d6; color: #8d3e37; }
+  .sw { display: inline-block; width: 15px; height: 15px; border-radius: 4px; border: 1px solid #b9a98f; vertical-align: -2px; margin-right: 5px; }
+  .warn { color: #a03a2e; font-weight: 700; }
+  .ok { color: #355b38; font-weight: 700; }
+  .muted { color: #9a8b7a; font-size: 12.5px; }
+  .chip { display: block; background: #d8e6ef; border: 1px solid #b8cfe0; border-radius: 6px; padding: 3px 6px; font-size: 12px; margin: 2px 0; }
+  .chip.done { background: #e4e0d6; border-color: #cfc8b8; color: #7a6f60; }
+  .need-line { display: flex; justify-content: space-between; border-bottom: 1px dashed #e1d5c5; padding: 4px 0; font-size: 13px; }
+  #toast { position: fixed; left: 50%; bottom: 26px; transform: translateX(-50%); background: #2f2a24; color: #fff; padding: 11px 20px; border-radius: 8px; font-size: 14px; opacity: 0; pointer-events: none; transition: opacity .25s; z-index: 99; max-width: 80vw; }
+  #toast.err { background: #a03a2e; }
+  #toast.show { opacity: 1; }
+  #modalMask { position: fixed; inset: 0; background: rgba(40,32,24,.45); display: none; z-index: 50; }
+  #modal { position: fixed; left: 50%; top: 50%; transform: translate(-50%,-50%); background: #fffaf2; border-radius: 12px; padding: 20px; width: min(480px, 92vw); display: none; z-index: 51; max-height: 86vh; overflow: auto; }
+  .link { color: #1f5f78; text-decoration: none; font-size: 13px; font-weight: 700; }
+  .empty { padding: 18px; text-align: center; color: #9a8b7a; border: 1px dashed #d9cdbc; border-radius: 8px; background: #fff; }
+  @media (max-width: 760px) { main { padding: 12px; } th, td { padding: 6px; font-size: 12.5px; } }
+</style>
 </head>
 <body>
-  <header>
-    <div><h1>手工织锦纹样排版台</h1><div>绘制经纬网格纹样，统计色线用量并保存方案。</div></div>
-    <div class="toolbar"><button id="saveBtn">保存方案</button><button id="exportBtn" class="secondary">导出JSON</button></div>
-  </header>
-  <main class="app">
-    <aside class="panel">
-      <h2>画布</h2>
-      <label>经向列数</label><input id="cols" type="number" value="18" min="6" max="36">
-      <label>纬向行数</label><input id="rows" type="number" value="14" min="6" max="32">
-      <button id="newBtn">新建网格</button>
-      <h2>色线库</h2>
-      <div class="palette" id="palette"></div>
-      <h2>基础纹样块</h2>
-      <div class="blocks">
-        <button data-block="dot" class="secondary">单点</button>
-        <button data-block="cross" class="secondary">十字</button>
-        <button data-block="diamond" class="secondary">小菱形</button>
+<header>
+  <div>
+    <h1>🧵 织锦工作室 · 生产排程与色线库存联动台</h1>
+    <div class="sub">纹样方案 → 织造工序 → 机台排程 → 完工登记，色线库存全程联动。</div>
+  </div>
+  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+    <a class="link" href="pattern.html">打开纹样排版台 →</a>
+    <button class="ghost" id="demoBtn">载入演示数据</button>
+    <button class="danger" id="resetBtn">清空数据</button>
+  </div>
+</header>
+<nav id="nav">
+  <button data-tab="board" class="active">排程看板</button>
+  <button data-tab="plans">纹样方案</button>
+  <button data-tab="yarns">色线库存</button>
+  <button data-tab="procs">织造工序</button>
+  <button data-tab="tx">库存流水</button>
+</nav>
+<main>
+  <!-- ============ 排程看板 ============ -->
+  <section class="tab active" id="tab-board">
+    <div class="cards" id="statCards"></div>
+    <div class="panel">
+      <h2 style="margin-top:0">新建排程</h2>
+      <div class="form-grid">
+        <div><label>待排程工序</label><select id="schProc"></select></div>
+        <div><label>机台</label><select id="schLoom"></select></div>
+        <div><label>生产日期</label><input id="schDate" type="date"></div>
+        <div style="display:flex;align-items:flex-end"><button id="schBtn" style="width:100%">确认排程（占用色线）</button></div>
       </div>
-    </aside>
-    <section class="panel"><div class="grid" id="grid"></div></section>
-    <aside class="panel">
-      <h2>操作</h2>
-      <div class="toolbar"><button id="undoBtn" class="secondary">撤销</button><button id="redoBtn" class="secondary">重做</button></div>
-      <p>点击填色，按住拖动可连续填色。</p>
-      <h2>用色统计</h2>
-      <div class="stats" id="stats"></div>
-      <h2>重复单元预览</h2>
-      <div class="preview" id="preview"></div>
-      <h2>断线风险</h2>
-      <div id="risk"></div>
-    </aside>
-  </main>
-  <script>
-    const colors = ["#f7e7c4","#a6322d","#1f5f78","#d6a437","#355b38","#713d7b","#1e1b18","#e98c52"];
-    const grid = document.querySelector("#grid");
-    const palette = document.querySelector("#palette");
-    const stats = document.querySelector("#stats");
-    const preview = document.querySelector("#preview");
-    const risk = document.querySelector("#risk");
-    let cols = 18, rows = 14, active = 1, block = "dot", dragging = false;
-    let cells = [];
-    let undo = [], redo = [];
-    function init(loadSaved = true) {
-      const saved = loadSaved && JSON.parse(localStorage.getItem("zfl31Pattern") || "null");
-      if (saved) { cols = saved.cols; rows = saved.rows; cells = saved.cells; }
-      else { cols = Number(document.querySelector("#cols").value); rows = Number(document.querySelector("#rows").value); cells = Array(cols * rows).fill(0); }
-      document.querySelector("#cols").value = cols; document.querySelector("#rows").value = rows;
-      render();
+      <div id="schPreview" style="margin-top:10px"></div>
+    </div>
+    <div class="panel">
+      <h2 style="margin-top:0">机台一周日程</h2>
+      <div style="overflow-x:auto"><table id="weekTable"></table></div>
+    </div>
+    <div class="panel">
+      <h2 style="margin-top:0">排程记录</h2>
+      <div style="overflow-x:auto"><table id="schTable"></table></div>
+    </div>
+  </section>
+
+  <!-- ============ 纹样方案 ============ -->
+  <section class="tab" id="tab-plans">
+    <div class="panel">
+      <h2 style="margin-top:0">新建纹样方案</h2>
+      <div class="form-grid">
+        <div><label>方案名称 *</label><input id="pName" placeholder="如：云锦·缠枝莲纹"></div>
+        <div><label>经线根数</label><input id="pWarp" type="number" min="1" value="960"></div>
+        <div><label>纬密（根/cm）</label><input id="pWeft" type="number" min="1" value="28"></div>
+        <div><label>门幅（cm）</label><input id="pWidth" type="number" min="1" value="68"></div>
+        <div><label>单件织长（m）</label><input id="pLen" type="number" min="0.1" step="0.1" value="2.4"></div>
+        <div><label>生产批量（件）</label><input id="pQty" type="number" min="1" value="3"></div>
+      </div>
+      <h3>经线用色（本批总用量，克）</h3>
+      <div id="warpRows"></div>
+      <button class="ghost" id="addWarpRow">＋ 添加经线色</button>
+      <h3>纬线用色（本批总用量，克）</h3>
+      <div id="weftRows"></div>
+      <button class="ghost" id="addWeftRow">＋ 添加纬线色</button>
+      <div style="margin-top:6px"><label>备注</label><input id="pNote" placeholder="工艺要求、客户等（可空）"></div>
+      <div id="planHint" style="margin:8px 0"></div>
+      <button id="planBtn">保存方案</button>
+    </div>
+    <div class="panel">
+      <h2 style="margin-top:0">方案列表</h2>
+      <div id="planList"></div>
+    </div>
+  </section>
+
+  <!-- ============ 色线库存 ============ -->
+  <section class="tab" id="tab-yarns">
+    <div class="panel">
+      <h2 style="margin-top:0">录入色线</h2>
+      <div class="form-grid">
+        <div><label>色线名称 *</label><input id="yName" placeholder="如：大红丝线"></div>
+        <div><label>颜色</label><input id="yColor" type="color" value="#a6322d" style="padding:2px;height:36px"></div>
+        <div><label>材质</label><input id="yMat" placeholder="如：桑蚕丝"></div>
+        <div><label>初始库存（克）</label><input id="yStock" type="number" min="0" value="500"></div>
+        <div style="display:flex;align-items:flex-end"><button id="yarnBtn" style="width:100%">入库新色线</button></div>
+      </div>
+    </div>
+    <div class="panel">
+      <h2 style="margin-top:0">库存明细</h2>
+      <div style="overflow-x:auto"><table id="yarnTable"></table></div>
+    </div>
+  </section>
+
+  <!-- ============ 织造工序 ============ -->
+  <section class="tab" id="tab-procs">
+    <div class="panel">
+      <h2 style="margin-top:0">工序列表（按方案分组）</h2>
+      <div id="procList"></div>
+    </div>
+  </section>
+
+  <!-- ============ 库存流水 ============ -->
+  <section class="tab" id="tab-tx">
+    <div class="panel">
+      <h2 style="margin-top:0">库存流水（入库 / 占用 / 退回 / 扣减 / 调整）</h2>
+      <div style="overflow-x:auto"><table id="txTable"></table></div>
+    </div>
+  </section>
+</main>
+
+<div id="modalMask"></div>
+<div id="modal"></div>
+<div id="toast"></div>
+
+<script>
+/* ================= 数据层（纯逻辑，不依赖 DOM，可单测） ================= */
+const LS_KEY = 'brocadeStudio.v1';
+
+function seedState() {
+  return {
+    v: 1,
+    plans: [],      // {id,name,warpEnds,weftDensity,widthCm,lengthM,qty,note,warpUse:[{yarnId,grams}],weftUse:[...],createdAt}
+    yarns: [],      // {id,name,color,material,stock,reserved}
+    looms: [ {id:'loom1',name:'一号织机'}, {id:'loom2',name:'二号织机'}, {id:'loom3',name:'三号织机'} ],
+    processes: [],  // {id,planId,seq,name,days,status:'pending'|'scheduled'|'done',yarnUse:[{yarnId,grams}]}
+    schedules: [],  // {id,processId,loomId,date,status:'active'|'done'|'cancelled',createdAt,completedAt,actualUse:[{yarnId,grams}]}
+    txs: []         // {id,time,type,yarnId,yarnName,stockDelta,resDelta,ref,note}
+  };
+}
+function loadState() {
+  try {
+    const s = JSON.parse(localStorage.getItem(LS_KEY));
+    if (s && s.v === 1 && Array.isArray(s.plans)) return s;
+  } catch (e) {}
+  return seedState();
+}
+let state = loadState();
+function persist() { localStorage.setItem(LS_KEY, JSON.stringify(state)); }
+function save() { persist(); render(); }
+
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+function yarnById(id) { return state.yarns.find(y => y.id === id); }
+function planById(id) { return state.plans.find(p => p.id === id); }
+function procById(id) { return state.processes.find(p => p.id === id); }
+function loomById(id) { return state.looms.find(l => l.id === id); }
+function available(y) { return y.stock - y.reserved; }
+function yarnName(id) { const y = yarnById(id); return y ? y.name : '（已删除色线）'; }
+
+function logTx(type, yarnId, stockDelta, resDelta, ref, note) {
+  state.txs.unshift({ id: uid(), time: new Date().toISOString(), type, yarnId,
+    yarnName: yarnName(yarnId), stockDelta, resDelta, ref: ref || '', note: note || '' });
+}
+
+/* ---- 方案 ---- */
+function addPlan(d) {
+  if (!d.name || !d.name.trim()) return { ok: false, msg: '请填写方案名称' };
+  const clean = rows => (rows || []).filter(r => r.yarnId && Number(r.grams) > 0)
+    .map(r => ({ yarnId: r.yarnId, grams: Number(r.grams) }));
+  const warpUse = clean(d.warpUse), weftUse = clean(d.weftUse);
+  if (!warpUse.length && !weftUse.length) return { ok: false, msg: '请至少录入一条经线或纬线用色（克数需大于 0）' };
+  const plan = { id: uid(), name: d.name.trim(), warpEnds: +d.warpEnds || 0, weftDensity: +d.weftDensity || 0,
+    widthCm: +d.widthCm || 0, lengthM: +d.lengthM || 0, qty: +d.qty || 1, note: d.note || '',
+    warpUse, weftUse, createdAt: new Date().toISOString() };
+  state.plans.push(plan);
+  return { ok: true, plan };
+}
+function deletePlan(id) {
+  const procs = state.processes.filter(p => p.planId === id);
+  const procIds = procs.map(p => p.id);
+  if (state.schedules.some(s => procIds.includes(s.processId) && s.status === 'active'))
+    return { ok: false, msg: '该方案存在进行中的排程，请先取消排程' };
+  state.schedules = state.schedules.filter(s => !procIds.includes(s.processId));
+  state.processes = state.processes.filter(p => p.planId !== id);
+  state.plans = state.plans.filter(p => p.id !== id);
+  return { ok: true };
+}
+
+/* ---- 工序拆分 ---- */
+function genProcesses(planId) {
+  const plan = planById(planId);
+  if (!plan) return { ok: false, msg: '方案不存在' };
+  if (state.processes.some(p => p.planId === planId)) return { ok: false, msg: '该方案已拆分过工序' };
+  const weaveDays = Math.max(1, Math.ceil(plan.qty * plan.lengthM / 2)); // 按每台日织约2米估算
+  const tpl = [
+    { name: '整经', days: 1, use: plan.warpUse },
+    { name: '穿综', days: 1, use: [] },
+    { name: '织造', days: weaveDays, use: plan.weftUse },
+    { name: '后整理', days: 1, use: [] }
+  ];
+  tpl.forEach((t, i) => state.processes.push({ id: uid(), planId, seq: i + 1, name: t.name,
+    days: t.days, status: 'pending', yarnUse: t.use.map(u => ({ ...u })) }));
+  return { ok: true };
+}
+
+/* ---- 色线库存 ---- */
+function addYarn(d) {
+  if (!d.name || !d.name.trim()) return { ok: false, msg: '请填写色线名称' };
+  const yarn = { id: uid(), name: d.name.trim(), color: d.color || '#999999',
+    material: d.material || '', stock: Math.max(0, +d.stock || 0), reserved: 0 };
+  state.yarns.push(yarn);
+  if (yarn.stock > 0) logTx('入库', yarn.id, yarn.stock, 0, '', '初始库存');
+  return { ok: true, yarn };
+}
+function restockYarn(id, grams) {
+  const y = yarnById(id); grams = +grams;
+  if (!y) return { ok: false, msg: '色线不存在' };
+  if (!(grams > 0)) return { ok: false, msg: '入库数量需大于 0' };
+  y.stock += grams;
+  logTx('入库', id, grams, 0, '', '补充入库');
+  return { ok: true };
+}
+function adjustYarn(id, newStock) {
+  const y = yarnById(id); newStock = +newStock;
+  if (!y) return { ok: false, msg: '色线不存在' };
+  if (!(newStock >= 0)) return { ok: false, msg: '库存不能为负数' };
+  if (newStock < y.reserved) return { ok: false, msg: '调整后库存不能低于已占用量（' + y.reserved + '克）' };
+  const delta = newStock - y.stock;
+  y.stock = newStock;
+  logTx('库存调整', id, delta, 0, '', '盘点调整');
+  return { ok: true };
+}
+function deleteYarn(id) {
+  const y = yarnById(id);
+  if (!y) return { ok: false, msg: '色线不存在' };
+  if (y.reserved > 0) return { ok: false, msg: '该色线有排程占用，不能删除' };
+  if (state.plans.some(p => p.warpUse.concat(p.weftUse).some(u => u.yarnId === id)))
+    return { ok: false, msg: '该色线已被方案引用，不能删除' };
+  state.yarns = state.yarns.filter(v => v.id !== id);
+  return { ok: true };
+}
+
+/* ---- 排程 ---- */
+function checkSchedule(procId, loomId, date) {
+  const errs = [];
+  const proc = procById(procId);
+  if (!proc) errs.push('请选择待排程工序');
+  else if (proc.status !== 'pending') errs.push('该工序已排程或已完工，不能重复排程');
+  if (!loomById(loomId)) errs.push('请选择机台');
+  if (!date) errs.push('请选择生产日期');
+  if (loomId && date && state.schedules.some(s => s.loomId === loomId && s.date === date && s.status === 'active'))
+    errs.push('该机台当天已有排程，同一机台同一天不能重复安排');
+  if (proc) {
+    for (const u of proc.yarnUse) {
+      const y = yarnById(u.yarnId);
+      if (!y) { errs.push('色线「' + yarnName(u.yarnId) + '」已不存在'); continue; }
+      if (available(y) < u.grams)
+        errs.push('色线「' + y.name + '」库存不足：需 ' + u.grams + ' 克，可用仅 ' + available(y) + ' 克');
     }
-    function render() {
-      palette.innerHTML = colors.map((c, i) => '<button class="swatch '+(i===active?'active':'')+'" data-color="'+i+'" style="background:'+c+'"></button>').join("");
-      palette.querySelectorAll("[data-color]").forEach(el => el.onclick = () => { active = Number(el.dataset.color); render(); });
-      grid.style.gridTemplateColumns = "repeat("+cols+", 1fr)";
-      grid.innerHTML = cells.map((v, i) => '<div class="cell" data-i="'+i+'" style="background:'+colors[v]+'"></div>').join("");
-      grid.querySelectorAll(".cell").forEach(el => {
-        el.onpointerdown = () => { dragging = true; paint(Number(el.dataset.i)); };
-        el.onpointerenter = () => { if (dragging) paint(Number(el.dataset.i)); };
-      });
-      window.onpointerup = () => dragging = false;
-      renderStats();
+  }
+  return errs;
+}
+function scheduleProcess(procId, loomId, date) {
+  const errs = checkSchedule(procId, loomId, date);
+  if (errs.length) return { ok: false, msg: errs.join('；') };
+  const proc = procById(procId);
+  const plan = planById(proc.planId);
+  for (const u of proc.yarnUse) {
+    yarnById(u.yarnId).reserved += u.grams;
+    logTx('排程占用', u.yarnId, 0, u.grams, plan.name + '·' + proc.name, '排程 ' + date);
+  }
+  state.schedules.push({ id: uid(), processId: procId, loomId, date, status: 'active',
+    createdAt: new Date().toISOString(), completedAt: null, actualUse: [] });
+  proc.status = 'scheduled';
+  return { ok: true };
+}
+function cancelSchedule(id) {
+  const sch = state.schedules.find(s => s.id === id);
+  if (!sch) return { ok: false, msg: '排程不存在' };
+  if (sch.status !== 'active') return { ok: false, msg: '仅进行中的排程可以取消' };
+  const proc = procById(sch.processId);
+  const plan = planById(proc.planId);
+  for (const u of proc.yarnUse) {           // 退回已占用库存
+    const y = yarnById(u.yarnId);
+    if (y) { y.reserved = Math.max(0, y.reserved - u.grams);
+      logTx('取消退回', u.yarnId, 0, -u.grams, plan.name + '·' + proc.name, '取消 ' + sch.date + ' 排程'); }
+  }
+  sch.status = 'cancelled';
+  proc.status = 'pending';
+  return { ok: true };
+}
+function completeSchedule(id, actualUse) {
+  const sch = state.schedules.find(s => s.id === id);
+  if (!sch) return { ok: false, msg: '排程不存在' };
+  if (sch.status !== 'active') return { ok: false, msg: '该排程已完工或已取消，不能重复完工' }; // 重复完工拦截
+  const proc = procById(sch.processId);
+  const plan = planById(proc.planId);
+  const actuals = proc.yarnUse.map(u => {
+    const a = (actualUse || []).find(x => x.yarnId === u.yarnId);
+    return { yarnId: u.yarnId, grams: a ? Math.max(0, +a.grams || 0) : u.grams };
+  });
+  for (const a of actuals) {                // 校验：释放本单占用后，库存须够扣实际耗线
+    const y = yarnById(a.yarnId);
+    const planned = proc.yarnUse.find(u => u.yarnId === a.yarnId).grams;
+    if (y && a.grams > y.stock - y.reserved + planned)
+      return { ok: false, msg: '色线「' + y.name + '」实际耗线 ' + a.grams + ' 克超出可扣减库存' };
+  }
+  for (const a of actuals) {
+    const y = yarnById(a.yarnId);
+    const planned = proc.yarnUse.find(u => u.yarnId === a.yarnId).grams;
+    if (!y) continue;
+    y.reserved = Math.max(0, y.reserved - planned);   // 释放计划占用
+    y.stock = Math.max(0, y.stock - a.grams);         // 按实际耗线扣减
+    logTx('完工扣减', a.yarnId, -a.grams, -planned, plan.name + '·' + proc.name,
+      '计划 ' + planned + ' 克，实耗 ' + a.grams + ' 克');
+  }
+  sch.status = 'done';
+  sch.completedAt = new Date().toISOString();
+  sch.actualUse = actuals;
+  proc.status = 'done';
+  return { ok: true };
+}
+
+/* ---- 演示数据 ---- */
+function loadDemo() {
+  if (!state.yarns.length) {
+    [ ['大红丝线', '#a6322d', '桑蚕丝', 800], ['宝蓝丝线', '#1f5f78', '桑蚕丝', 600],
+      ['金黄丝线', '#d6a437', '桑蚕丝', 450], ['墨绿棉线', '#355b38', '精梳棉', 900],
+      ['紫檀丝线', '#713d7b', '桑蚕丝', 300], ['本白棉线', '#f7e7c4', '精梳棉', 1200]
+    ].forEach(v => addYarn({ name: v[0], color: v[1], material: v[2], stock: v[3] }));
+  }
+  const y = state.yarns;
+  const r = addPlan({ name: '云锦·缠枝莲纹（演示）', warpEnds: 960, weftDensity: 28, widthCm: 68, lengthM: 2.4, qty: 3,
+    note: '演示方案，可直接拆分工序并排程',
+    warpUse: [{ yarnId: y[0].id, grams: 420 }, { yarnId: y[5] ? y[5].id : y[0].id, grams: 180 }],
+    weftUse: [{ yarnId: y[1] ? y[1].id : y[0].id, grams: 260 }, { yarnId: y[2] ? y[2].id : y[0].id, grams: 150 }] });
+  if (r.ok) genProcesses(r.plan.id);
+  return { ok: true };
+}
+function resetAll() { state = seedState(); persist(); }
+function __getState() { return state; }   // 供测试使用
+
+/* ================= 界面层 ================= */
+function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+function fmtTime(iso) { const d = new Date(iso); return d.toLocaleDateString('zh-CN') + ' ' + d.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' }); }
+function todayStr() { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+function addDays(str, n) { const d = new Date(str + 'T00:00:00'); d.setDate(d.getDate() + n); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+const PROC_STATUS = { pending: ['待排程', 't-pending'], scheduled: ['已排程', 't-active'], done: ['已完工', 't-done'] };
+const SCH_STATUS = { active: ['进行中', 't-active'], done: ['已完工', 't-done'], cancelled: ['已取消', 't-cancel'] };
+
+let toastTimer = null;
+function toast(msg, isErr) {
+  const t = document.querySelector('#toast');
+  t.textContent = msg; t.className = isErr ? 'err show' : 'show';
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
+}
+function useListHtml(list) {
+  if (!list || !list.length) return '<span class="muted">无</span>';
+  return list.map(u => { const y = yarnById(u.yarnId);
+    return '<span class="sw" style="background:' + (y ? y.color : '#ccc') + '"></span>' + esc(yarnName(u.yarnId)) + ' ' + u.grams + 'g';
+  }).join('<br>');
+}
+
+function render() {
+  if (typeof document === 'undefined') return;
+  renderStats(); renderSchForm(); renderWeek(); renderSchTable();
+  renderPlans(); renderYarns(); renderProcs(); renderTx();
+}
+
+/* ---- 看板 ---- */
+function renderStats() {
+  const low = state.yarns.filter(y => available(y) < 50);
+  const cards = [
+    [state.plans.length, '纹样方案'],
+    [state.processes.filter(p => p.status === 'pending').length, '待排程工序'],
+    [state.schedules.filter(s => s.status === 'active').length, '进行中排程'],
+    [low.length, '低库存色线（可用<50g）']
+  ];
+  document.querySelector('#statCards').innerHTML = cards.map(c =>
+    '<div class="card"><div class="num">' + c[0] + '</div><div class="lbl">' + c[1] + '</div></div>').join('');
+}
+function renderSchForm() {
+  const sel = document.querySelector('#schProc');
+  const pend = state.processes.filter(p => p.status === 'pending');
+  sel.innerHTML = pend.length
+    ? pend.map(p => { const pl = planById(p.planId);
+        return '<option value="' + p.id + '">' + esc(pl ? pl.name : '?') + ' · ' + esc(p.name) + '（约' + p.days + '天）</option>'; }).join('')
+    : '<option value="">（暂无待排程工序，请先在方案中拆分工序）</option>';
+  document.querySelector('#schLoom').innerHTML = state.looms.map(l => '<option value="' + l.id + '">' + esc(l.name) + '</option>').join('');
+  const dateEl = document.querySelector('#schDate');
+  if (!dateEl.value) dateEl.value = todayStr();
+  dateEl.min = todayStr();
+  renderSchPreview();
+}
+function renderSchPreview() {
+  const box = document.querySelector('#schPreview');
+  const procId = document.querySelector('#schProc').value;
+  const loomId = document.querySelector('#schLoom').value;
+  const date = document.querySelector('#schDate').value;
+  const proc = procById(procId);
+  if (!proc) { box.innerHTML = ''; return; }
+  const errs = checkSchedule(procId, loomId, date);
+  let html = '<div style="font-size:13px"><b>本工序色线需求与当前可用量：</b>';
+  if (!proc.yarnUse.length) html += '<div class="muted">本工序不耗用色线</div>';
+  for (const u of proc.yarnUse) {
+    const y = yarnById(u.yarnId);
+    const av = y ? available(y) : 0, enough = y && av >= u.grams;
+    html += '<div class="need-line"><span><span class="sw" style="background:' + (y ? y.color : '#ccc') + '"></span>' +
+      esc(yarnName(u.yarnId)) + '</span><span class="' + (enough ? 'ok' : 'warn') + '">需 ' + u.grams + 'g / 可用 ' + av + 'g' + (enough ? ' ✓' : ' ✗ 不足') + '</span></div>';
+  }
+  html += '</div>';
+  if (errs.length) html += '<p class="warn" style="margin:8px 0 0">⚠ ' + esc(errs.join('；')) + '</p>';
+  else html += '<p class="ok" style="margin:8px 0 0">✓ 校验通过，可以排程</p>';
+  box.innerHTML = html;
+}
+function renderWeek() {
+  const days = Array.from({ length: 7 }, (_, i) => addDays(todayStr(), i));
+  const wd = ['日', '一', '二', '三', '四', '五', '六'];
+  let html = '<tr><th>机台</th>' + days.map(d => {
+    const dt = new Date(d + 'T00:00:00');
+    return '<th>' + d.slice(5) + ' 周' + wd[dt.getDay()] + '</th>';
+  }).join('') + '</tr>';
+  for (const loom of state.looms) {
+    html += '<tr><td><b>' + esc(loom.name) + '</b></td>';
+    for (const d of days) {
+      const items = state.schedules.filter(s => s.loomId === loom.id && s.date === d && s.status !== 'cancelled');
+      html += '<td style="min-width:110px">' + items.map(s => {
+        const p = procById(s.processId), pl = p && planById(p.planId);
+        return '<span class="chip' + (s.status === 'done' ? ' done' : '') + '">' + (s.status === 'done' ? '✓ ' : '') +
+          esc(pl ? pl.name : '?') + '·' + esc(p ? p.name : '?') + '</span>';
+      }).join('') + '</td>';
     }
-    function snapshot() { undo.push([...cells]); redo = []; if (undo.length > 50) undo.shift(); }
-    function paint(i) {
-      snapshot();
-      const targets = pattern(i);
-      targets.forEach(t => { if (t >= 0 && t < cells.length) cells[t] = active; });
-      render();
-    }
-    function pattern(i) {
-      const x = i % cols, y = Math.floor(i / cols);
-      if (block === "cross") return [i, idx(x-1,y), idx(x+1,y), idx(x,y-1), idx(x,y+1)].filter(v => v !== null);
-      if (block === "diamond") return [idx(x,y-1), idx(x-1,y), i, idx(x+1,y), idx(x,y+1)].filter(v => v !== null);
-      return [i];
-    }
-    function idx(x,y) { return x < 0 || x >= cols || y < 0 || y >= rows ? null : y * cols + x; }
-    function renderStats() {
-      const counts = colors.map((_, i) => cells.filter(v => v === i).length);
-      stats.innerHTML = counts.map((n, i) => '<div class="stat"><span><span style="display:inline-block;width:14px;height:14px;background:'+colors[i]+'"></span> 色线'+i+'</span><b>'+n+'</b></div>').join("");
-      preview.innerHTML = Array.from({length: 36}, (_, i) => '<div class="mini" style="background:'+colors[cells[(i % 6) + Math.floor(i / 6) * cols] || colors[0]]+'"></div>').join("");
-      const riskRows = [];
-      for (let y = 0; y < rows; y++) {
-        let switches = 0;
-        for (let x = 1; x < cols; x++) if (cells[y*cols+x] !== cells[y*cols+x-1]) switches++;
-        if (switches > cols * .62) riskRows.push(y + 1);
-      }
-      risk.innerHTML = riskRows.length ? '<p class="warning">第'+riskRows.join("、")+'行换色过密，可能断线。</p>' : '<p>暂无明显断线风险。</p>';
-    }
-    document.querySelectorAll("[data-block]").forEach(btn => btn.onclick = () => block = btn.dataset.block);
-    document.querySelector("#newBtn").onclick = () => { undo = []; redo = []; init(false); };
-    document.querySelector("#undoBtn").onclick = () => { if (!undo.length) return; redo.push([...cells]); cells = undo.pop(); render(); };
-    document.querySelector("#redoBtn").onclick = () => { if (!redo.length) return; undo.push([...cells]); cells = redo.pop(); render(); };
-    document.querySelector("#saveBtn").onclick = () => localStorage.setItem("zfl31Pattern", JSON.stringify({ cols, rows, cells }));
-    document.querySelector("#exportBtn").onclick = () => {
-      const data = { cols, rows, cells, usage: colors.map((color, i) => ({ color, count: cells.filter(v => v === i).length })) };
-      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
-      const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "brocade-pattern.json"; a.click(); URL.revokeObjectURL(a.href);
-    };
-    init();
-  </script>
+    html += '</tr>';
+  }
+  document.querySelector('#weekTable').innerHTML = html;
+}
+function renderSchTable() {
+  const t = document.querySelector('#schTable');
+  if (!state.schedules.length) { t.innerHTML = '<tr><td><div class="empty">暂无排程记录</div></td></tr>'; return; }
+  let html = '<tr><th>方案 / 工序</th><th>机台</th><th>日期</th><th>状态</th><th>色线（计划占用 / 实际耗用）</th><th>操作</th></tr>';
+  const rows = [...state.schedules].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  for (const s of rows) {
+    const p = procById(s.processId), pl = p && planById(p.planId), loom = loomById(s.loomId);
+    const st = SCH_STATUS[s.status];
+    const useHtml = s.status === 'done' ? useListHtml(s.actualUse) : useListHtml(p ? p.yarnUse : []);
+    const ops = s.status === 'active'
+      ? '<button data-complete="' + s.id + '">完工登记</button> <button class="danger" data-cancel="' + s.id + '">取消排程</button>'
+      : (s.status === 'cancelled' ? '<span class="muted">占用已退回</span>' : '<span class="muted">完工于 ' + fmtTime(s.completedAt) + '</span>');
+    html += '<tr><td>' + esc(pl ? pl.name : '?') + ' / <b>' + esc(p ? p.name : '?') + '</b></td><td>' + esc(loom ? loom.name : '?') +
+      '</td><td>' + s.date + '</td><td><span class="tag ' + st[1] + '">' + st[0] + '</span></td><td>' + useHtml + '</td><td style="white-space:nowrap">' + ops + '</td></tr>';
+  }
+  t.innerHTML = html;
+  t.querySelectorAll('[data-cancel]').forEach(b => b.onclick = () => {
+    if (!confirm('确定取消该排程？已占用的色线将退回库存。')) return;
+    const r = cancelSchedule(b.dataset.cancel); save();
+    r.ok ? toast('已取消排程，占用色线已退回') : toast(r.msg, true);
+  });
+  t.querySelectorAll('[data-complete]').forEach(b => b.onclick = () => openCompleteModal(b.dataset.complete));
+}
+
+/* ---- 完工登记弹窗 ---- */
+let completingId = null;
+function openCompleteModal(schId) {
+  const sch = state.schedules.find(s => s.id === schId);
+  if (!sch || sch.status !== 'active') { toast('该排程已完工或已取消，不能重复完工', true); return; }
+  completingId = schId;
+  const p = procById(sch.processId), pl = planById(p.planId);
+  let html = '<h2 style="margin-top:0">完工登记 · ' + esc(pl.name) + ' / ' + esc(p.name) + '</h2>' +
+    '<p class="muted">登记实际耗线（克），库存按实际扣减，计划占用同步释放。</p>';
+  if (!p.yarnUse.length) html += '<p>本工序不耗用色线，确认即可完工。</p>';
+  for (const u of p.yarnUse) {
+    const y = yarnById(u.yarnId);
+    html += '<label><span class="sw" style="background:' + (y ? y.color : '#ccc') + '"></span>' + esc(yarnName(u.yarnId)) +
+      '（计划 ' + u.grams + 'g）</label><input type="number" min="0" data-actual="' + u.yarnId + '" value="' + u.grams + '">';
+  }
+  html += '<div style="display:flex;gap:8px;margin-top:14px"><button id="modalOk" style="flex:1">确认完工</button><button class="secondary" id="modalNo">返回</button></div>';
+  const m = document.querySelector('#modal');
+  m.innerHTML = html;
+  document.querySelector('#modalMask').style.display = 'block';
+  m.style.display = 'block';
+  m.querySelector('#modalNo').onclick = closeModal;
+  m.querySelector('#modalOk').onclick = () => {
+    const actuals = [...m.querySelectorAll('[data-actual]')].map(inp => ({ yarnId: inp.dataset.actual, grams: +inp.value || 0 }));
+    const r = completeSchedule(completingId, actuals);
+    if (r.ok) { closeModal(); save(); toast('完工登记成功，库存已按实际耗线扣减'); }
+    else toast(r.msg, true);
+  };
+}
+function closeModal() {
+  document.querySelector('#modalMask').style.display = 'none';
+  document.querySelector('#modal').style.display = 'none';
+  completingId = null;
+}
+
+/* ---- 方案 ---- */
+let warpRows = [], weftRows = [];   // 表单中的临时行 [{yarnId, grams}]
+function yarnOptions(val) {
+  return state.yarns.map(y => '<option value="' + y.id + '"' + (y.id === val ? ' selected' : '') + '>' +
+    esc(y.name) + '（可用 ' + available(y) + 'g）</option>').join('');
+}
+function renderUseRows() {
+  const mk = (rows, arr) => {
+    const box = document.querySelector(rows === 'warp' ? '#warpRows' : '#weftRows');
+    const list = rows === 'warp' ? warpRows : weftRows;
+    box.innerHTML = list.map((r, i) =>
+      '<div class="row"><select data-k="' + rows + '" data-i="' + i + '">' + yarnOptions(r.yarnId) + '</select>' +
+      '<input type="number" min="1" placeholder="克数" data-g="' + rows + '" data-i="' + i + '" value="' + (r.grams || '') + '">' +
+      '<button class="danger del" data-del="' + rows + '" data-i="' + i + '">删</button></div>').join('') ||
+      '<div class="muted" style="margin-bottom:6px">未添加</div>';
+    box.querySelectorAll('select').forEach(s => s.onchange = () => { (rows === 'warp' ? warpRows : weftRows)[+s.dataset.i].yarnId = s.value; });
+    box.querySelectorAll('input').forEach(inp => inp.oninput = () => { (rows === 'warp' ? warpRows : weftRows)[+inp.dataset.i].grams = +inp.value; });
+    box.querySelectorAll('[data-del]').forEach(b => b.onclick = () => { (rows === 'warp' ? warpRows : weftRows).splice(+b.dataset.i, 1); renderUseRows(); });
+  };
+  mk('warp'); mk('weft');
+  document.querySelector('#planHint').innerHTML = state.yarns.length
+    ? '' : '<span class="warn">尚未录入任何色线，请先到「色线库存」页录入。</span>';
+}
+function renderPlans() {
+  renderUseRows();
+  const box = document.querySelector('#planList');
+  if (!state.plans.length) { box.innerHTML = '<div class="empty">暂无方案。新建方案后，可一键拆分为「整经 → 穿综 → 织造 → 后整理」工序。</div>'; return; }
+  box.innerHTML = state.plans.map(pl => {
+    const procs = state.processes.filter(p => p.planId === pl.id).sort((a, b) => a.seq - b.seq);
+    const procHtml = procs.length
+      ? procs.map(p => { const st = PROC_STATUS[p.status];
+          return '<span class="tag ' + st[1] + '" style="margin:2px 4px 2px 0">' + p.seq + '.' + esc(p.name) + ' ' + st[0] + '</span>'; }).join('')
+      : '<span class="muted">尚未拆分工序</span>';
+    return '<div class="panel" style="margin-bottom:10px;padding:12px 14px">' +
+      '<div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap"><b style="font-size:15px">' + esc(pl.name) + '</b>' +
+      '<span style="white-space:nowrap">' +
+      (procs.length ? '' : '<button data-gen="' + pl.id + '">拆分工序</button> ') +
+      '<button class="danger" data-delplan="' + pl.id + '">删除</button></span></div>' +
+      '<div class="muted" style="margin:6px 0">经 ' + pl.warpEnds + ' 根 · 纬密 ' + pl.weftDensity + ' 根/cm · 门幅 ' + pl.widthCm +
+      'cm · 织长 ' + pl.lengthM + 'm × ' + pl.qty + ' 件' + (pl.note ? ' · ' + esc(pl.note) : '') + '</div>' +
+      '<div style="font-size:13px"><b>经线：</b>' + useListHtml(pl.warpUse) + '<br><b>纬线：</b>' + useListHtml(pl.weftUse) + '</div>' +
+      '<div style="margin-top:6px">' + procHtml + '</div></div>';
+  }).join('');
+  box.querySelectorAll('[data-gen]').forEach(b => b.onclick = () => {
+    const r = genProcesses(b.dataset.gen); save();
+    r.ok ? toast('已拆分为 4 道织造工序，可到看板排程') : toast(r.msg, true);
+  });
+  box.querySelectorAll('[data-delplan]').forEach(b => b.onclick = () => {
+    if (!confirm('确定删除该方案及其工序？')) return;
+    const r = deletePlan(b.dataset.delplan); save();
+    r.ok ? toast('方案已删除') : toast(r.msg, true);
+  });
+}
+
+/* ---- 库存 ---- */
+function renderYarns() {
+  const t = document.querySelector('#yarnTable');
+  if (!state.yarns.length) { t.innerHTML = '<tr><td><div class="empty">暂无色线库存，请先录入。</div></td></tr>'; return; }
+  let html = '<tr><th>色线</th><th>材质</th><th>库存(g)</th><th>已占用(g)</th><th>可用(g)</th><th>补充入库</th><th>操作</th></tr>';
+  for (const y of state.yarns) {
+    const av = available(y);
+    html += '<tr><td><span class="sw" style="background:' + y.color + '"></span><b>' + esc(y.name) + '</b></td><td>' + esc(y.material || '—') +
+      '</td><td>' + y.stock + '</td><td>' + y.reserved + '</td><td class="' + (av < 50 ? 'warn' : 'ok') + '">' + av + '</td>' +
+      '<td style="white-space:nowrap"><input type="number" min="1" placeholder="克" style="width:80px;display:inline-block" data-rein="' + y.id + '"> ' +
+      '<button class="secondary" data-rebtn="' + y.id + '">入库</button></td>' +
+      '<td style="white-space:nowrap"><button class="ghost" data-adj="' + y.id + '">盘点调整</button> <button class="danger" data-delyarn="' + y.id + '">删除</button></td></tr>';
+  }
+  t.innerHTML = html;
+  t.querySelectorAll('[data-rebtn]').forEach(b => b.onclick = () => {
+    const inp = t.querySelector('[data-rein="' + b.dataset.rebtn + '"]');
+    const r = restockYarn(b.dataset.rebtn, +inp.value); save();
+    r.ok ? toast('入库成功') : toast(r.msg, true);
+  });
+  t.querySelectorAll('[data-adj]').forEach(b => b.onclick = () => {
+    const y = yarnById(b.dataset.adj);
+    const v = prompt('盘点后「' + y.name + '」的实际库存（克）：', y.stock);
+    if (v === null) return;
+    const r = adjustYarn(y.id, +v); save();
+    r.ok ? toast('库存已调整') : toast(r.msg, true);
+  });
+  t.querySelectorAll('[data-delyarn]').forEach(b => b.onclick = () => {
+    if (!confirm('确定删除该色线？')) return;
+    const r = deleteYarn(b.dataset.delyarn); save();
+    r.ok ? toast('已删除') : toast(r.msg, true);
+  });
+}
+
+/* ---- 工序 ---- */
+function renderProcs() {
+  const box = document.querySelector('#procList');
+  if (!state.processes.length) { box.innerHTML = '<div class="empty">暂无工序。请先在「纹样方案」中保存方案并点击「拆分工序」。</div>'; return; }
+  box.innerHTML = state.plans.filter(pl => state.processes.some(p => p.planId === pl.id)).map(pl => {
+    const procs = state.processes.filter(p => p.planId === pl.id).sort((a, b) => a.seq - b.seq);
+    return '<h3>' + esc(pl.name) + '</h3><table><tr><th>序号</th><th>工序</th><th>预计工期</th><th>耗用色线</th><th>状态</th><th>操作</th></tr>' +
+      procs.map(p => { const st = PROC_STATUS[p.status];
+        return '<tr><td>' + p.seq + '</td><td><b>' + esc(p.name) + '</b></td><td>约 ' + p.days + ' 天</td><td>' + useListHtml(p.yarnUse) +
+          '</td><td><span class="tag ' + st[1] + '">' + st[0] + '</span></td><td>' +
+          (p.status === 'pending' ? '<button data-gosch="' + p.id + '">去排程</button>' : '<span class="muted">—</span>') + '</td></tr>';
+      }).join('') + '</table>';
+  }).join('');
+  box.querySelectorAll('[data-gosch]').forEach(b => b.onclick = () => {
+    switchTab('board');
+    document.querySelector('#schProc').value = b.dataset.gosch;
+    renderSchPreview();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+}
+
+/* ---- 流水 ---- */
+function renderTx() {
+  const t = document.querySelector('#txTable');
+  if (!state.txs.length) { t.innerHTML = '<tr><td><div class="empty">暂无流水记录</div></td></tr>'; return; }
+  const sign = n => (n > 0 ? '+' + n : n === 0 ? '—' : String(n));
+  t.innerHTML = '<tr><th>时间</th><th>类型</th><th>色线</th><th>库存变动(g)</th><th>占用变动(g)</th><th>关联</th><th>备注</th></tr>' +
+    state.txs.map(x => '<tr><td style="white-space:nowrap">' + fmtTime(x.time) + '</td><td><b>' + esc(x.type) + '</b></td><td>' +
+      esc(x.yarnName) + '</td><td>' + sign(x.stockDelta) + '</td><td>' + sign(x.resDelta) + '</td><td>' + esc(x.ref || '—') +
+      '</td><td>' + esc(x.note || '') + '</td></tr>').join('');
+}
+
+/* ---- 事件绑定 ---- */
+function switchTab(name) {
+  document.querySelectorAll('nav button').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
+  document.querySelectorAll('section.tab').forEach(s => s.classList.toggle('active', s.id === 'tab-' + name));
+}
+function bindEvents() {
+  document.querySelectorAll('nav button').forEach(b => b.onclick = () => switchTab(b.dataset.tab));
+  document.querySelector('#demoBtn').onclick = () => { loadDemo(); save(); toast('演示数据已载入'); };
+  document.querySelector('#resetBtn').onclick = () => {
+    if (confirm('确定清空全部方案、工序、库存与流水？此操作不可恢复。')) { resetAll(); render(); toast('已清空全部数据'); }
+  };
+  // 方案
+  document.querySelector('#addWarpRow').onclick = () => { warpRows.push({ yarnId: state.yarns[0] ? state.yarns[0].id : '', grams: 0 }); renderUseRows(); };
+  document.querySelector('#addWeftRow').onclick = () => { weftRows.push({ yarnId: state.yarns[0] ? state.yarns[0].id : '', grams: 0 }); renderUseRows(); };
+  document.querySelector('#planBtn').onclick = () => {
+    const r = addPlan({ name: document.querySelector('#pName').value, warpEnds: document.querySelector('#pWarp').value,
+      weftDensity: document.querySelector('#pWeft').value, widthCm: document.querySelector('#pWidth').value,
+      lengthM: document.querySelector('#pLen').value, qty: document.querySelector('#pQty').value,
+      note: document.querySelector('#pNote').value, warpUse: warpRows, weftUse: weftRows });
+    if (!r.ok) { toast(r.msg, true); return; }
+    warpRows = []; weftRows = [];
+    document.querySelector('#pName').value = ''; document.querySelector('#pNote').value = '';
+    save(); toast('方案已保存，可点击「拆分工序」');
+  };
+  // 色线
+  document.querySelector('#yarnBtn').onclick = () => {
+    const r = addYarn({ name: document.querySelector('#yName').value, color: document.querySelector('#yColor').value,
+      material: document.querySelector('#yMat').value, stock: document.querySelector('#yStock').value });
+    if (!r.ok) { toast(r.msg, true); return; }
+    document.querySelector('#yName').value = ''; document.querySelector('#yMat').value = '';
+    save(); toast('色线已入库');
+  };
+  // 排程
+  ['#schProc', '#schLoom', '#schDate'].forEach(q => document.querySelector(q).addEventListener('change', renderSchPreview));
+  document.querySelector('#schBtn').onclick = () => {
+    const r = scheduleProcess(document.querySelector('#schProc').value, document.querySelector('#schLoom').value,
+      document.querySelector('#schDate').value);
+    if (r.ok) { save(); toast('排程成功，色线已占用'); } else toast(r.msg, true);
+  };
+  document.querySelector('#modalMask').onclick = closeModal;
+}
+
+if (typeof document !== 'undefined') { bindEvents(); render(); }
+</script>
 </body>
 </html>
