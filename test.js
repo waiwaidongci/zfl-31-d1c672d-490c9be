@@ -239,7 +239,14 @@ group('刷新恢复（localStorage 持久化）', () => {
 
   const errs = app2.checkSchedule(hz.id, 'loom1', '2026-09-25');
   ok('刷新后已完工日期仍占用机台', errs.some(e => e.includes('完工记录')), errs.join('；'));
-  ok('刷新后库存不足仍拦截', app2.checkSchedule(zz.id, 'loom3', '2026-09-27').length > 0 || true);
+
+  // 刷新后库存不足仍拦截：蓝线可用 = 200 - 80(织造占用) = 120g，新方案织造需 150g
+  const plan2 = mkPlan(app2, 'P2', [], [{ yarnId: yb.id, grams: 150 }]);
+  const zz2 = procOf(app2, plan2.id, '织造');
+  const rLow = app2.scheduleProcess(zz2.id, 'loom3', '2026-09-27');
+  ok('刷新后库存不足仍拦截', !rLow.ok && rLow.msg.includes('库存不足'), rLow.msg);
+  ok('拦截不产生新占用（蓝线 reserved 仍为 80）',
+    app2.__getState().yarns.find(v => v.id === yb.id).reserved === 80);
 
   store['brocadeStudio.v1'] = '{broken json';
   const app3 = boot();
